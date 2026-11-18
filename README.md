@@ -2,7 +2,7 @@
 
 Simulador visual de remuneração de parcerias, com a identidade da Zermatt Garantidora.
 
-Informe a quantidade de condomínios, a arrecadação mensal média por condomínio, a taxa e a participação da administradora. O gráfico apresenta o repasse à administradora e a receita da Zermatt, com visualizações mensal e anual e resumo para download.
+Informe a quantidade de condomínios, a arrecadação mensal média por condomínio e a taxa. A **Participação do parceiro é fixa em 30%** sobre a receita da taxa e não pode ser alterada. O gráfico apresenta o repasse ao parceiro e a receita da Zermatt, com visualizações mensal e anual e resumo para download.
 
 ## Executar
 
@@ -20,10 +20,10 @@ Os arquivos também podem ser publicados em qualquer hospedagem estática, usand
 
 - Arrecadação total mensal = quantidade × arrecadação média por condomínio.
 - Receita da taxa = arrecadação total × taxa aplicada ÷ 100.
-- Repasse à administradora = receita da taxa × participação ÷ 100.
-- Receita da Zermatt = receita da taxa − repasse à administradora, antes de outras despesas.
+- Repasse ao parceiro = receita da taxa × 30 ÷ 100.
+- Receita da Zermatt = receita da taxa − repasse ao parceiro, antes de outras despesas.
 
-O exemplo inicial usa 1 condomínio, arrecadação de R$ 100.000, taxa de 4% e participação de 30%: R$ 1.200 para a administradora e R$ 2.800 para a Zermatt por mês.
+O exemplo inicial usa 1 condomínio, arrecadação de R$ 100.000 e taxa de 4%: a participação fixa gera R$ 1.200 para o parceiro e R$ 2.800 para a Zermatt por mês. A interface não oferece campo editável ou slider para essa participação; o modelo também rejeita qualquer percentual diferente de 30%.
 
 Em **Taxa por quantidade**, as faixas são configuráveis. A maior quantidade mínima atingida determina a taxa aplicada sobre toda a carteira. Sem faixas, vale a taxa inicial. A projeção anual considera 12 meses iguais, com arredondamento mensal em centavos.
 
@@ -31,13 +31,13 @@ Em **Taxa por quantidade**, as faixas são configuráveis. A maior quantidade m�
 
 Selecione o **estado do franqueado**. A pagadora permanece identificada como Zermatt/Paraná. A seleção carrega uma referência **estimada de lucro presumido para serviços de intermediação entre PJs**, revisada em **18/11/2026**; não confirma o regime real do franqueado.
 
-O campo abaixo da receita total mostra o líquido sobre a **comissão da administradora**, com discriminação de ISS, PIS, Cofins, IRPJ e CSLL. Na referência, o IRPJ inclui o adicional quando aplicável. A presunção majorada de 2026 é aplicada ao excedente do limite proporcional trimestral de R$ 1,25 milhão; a provisão usa três meses iguais e somente esta comissão, sem outras receitas ou ajustes acumulados. Valores de IRPJ/CSLL são calculados diretamente, sem usar o arredondamento dos percentuais exibidos. Acima de R$ 78 milhões anuais projetados, a referência é bloqueada; use o enquadramento validado pela contabilidade.
+O campo abaixo da receita total mostra o líquido sobre a **comissão do parceiro**, com discriminação de ISS, PIS, Cofins, IRPJ e CSLL. Na referência, o IRPJ inclui o adicional quando aplicável. A presunção majorada de 2026 é aplicada ao excedente do limite proporcional trimestral de R$ 1,25 milhão; a provisão usa três meses iguais e somente esta comissão, sem outras receitas ou ajustes acumulados. Valores de IRPJ/CSLL são calculados diretamente, sem usar o arredondamento dos percentuais exibidos. Acima de R$ 78 milhões anuais projetados, a referência é bloqueada; use o enquadramento validado pela contabilidade.
 
 **O ISS é municipal.** Sem a alíquota do município e do serviço, usa-se 5% como referência e mostra-se a sensibilidade do líquido entre ISS de 2% e 5%. Informe o município para registrar o contexto e ajuste o ISS conforme a contabilidade. Não há consulta automática à prefeitura. Mudar de estado, por si só, não muda os impostos federais nem acrescenta ICMS interestadual a esta hipótese de serviço; valores iguais entre UFs são esperados.
 
 Em **Impostos e retenções**, ajuste as alíquotas efetivas e informe separadamente as retenções. Campo vazio significa desconhecido; informe `0` para ausência de incidência ou retenção. Alterar somente o ISS preserva o cálculo federal automático. Alterar outro tributo passa para alíquotas manuais; selecionar outra UF ou carregar a referência novamente restaura os parâmetros e limpa retenções/município quando a UF muda.
 
-- Comissão bruta = repasse à administradora antes dos tributos.
+- Comissão bruta = repasse ao parceiro antes dos tributos.
 - Valor previsto no pagamento = comissão bruta − retenções informadas.
 - Líquido disponível = pagamento − saldo de tributos a recolher pelo franqueado.
 - IRRF pode antecipar IRPJ: a parcela retida não é descontada novamente como custo.
@@ -56,10 +56,10 @@ Com Node.js 24 ou superior, sem instalar dependências:
 node --test
 ```
 
-Gate de cobertura dos módulos novos de cálculo e exportação:
+Gate de cobertura dos módulos de cálculo e exportação:
 
 ```sh
-node --test --experimental-test-coverage --test-coverage-include=taxes.mjs --test-coverage-include=regional-taxes.mjs --test-coverage-include=summary.mjs --test-coverage-lines=80 --test-coverage-functions=80 --test-coverage-branches=80
+node --test --experimental-test-coverage --test-coverage-include=model.mjs --test-coverage-include=taxes.mjs --test-coverage-include=regional-taxes.mjs --test-coverage-include=summary.mjs --test-coverage-lines=80 --test-coverage-functions=80 --test-coverage-branches=80
 ```
 
 O workflow `Tests` executa esse gate e valida a sintaxe dos módulos. As verificações de navegador e seus limites estão documentados em [docs/verification.md](docs/verification.md).
