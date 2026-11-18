@@ -25,9 +25,7 @@ export function createSimulationSummary(r) {
     `Receita da Zermatt: ${currency.format(r.remainder)}`,
     '',
     'ESTIMATIVA TRIBUTÁRIA DO FRANQUEADO',
-    `Pagadora: Zermatt — Paraná (PR). Franqueado: ${r.taxRegion?.stateName ? r.taxRegion.stateName+' ('+r.taxRegion.stateCode+')' : 'UF não informada'}.`,
-    ...(r.taxRegion?.municipality ? [`Município informado: ${r.taxRegion.municipality} (alíquota municipal não consultada automaticamente).`] : []),
-    ...(r.taxRegion ? [`Referências legislativas consultadas em ${r.taxRegion.reviewedAt}; cenário de 2026, sem atualização legislativa automática.`] : []),
+    ...(r.taxReference ? [`Referências legislativas consultadas em ${r.taxReference.reviewedAt}; cenário de 2026, sem atualização legislativa automática.`] : []),
     r.taxScenario,
     'Base de todos os percentuais: comissão bruta do parceiro, não a receita total da taxa.',
     ...TAXES.map(tax => {
@@ -35,7 +33,7 @@ export function createSimulationSummary(r) {
       const row = t?.rows.find(item=>item.id===tax.id);
       const total = entry.rate === null ? 'não informado' : pct(entry.rate);
       const retained = entry.withholdingRate === null ? 'não informada' : pct(entry.withholdingRate);
-      const approximate = r.taxRegion?.automatic && ['irpj','csll'].includes(tax.id) ? ' (efetivo aproximado; valor apurado diretamente)' : '';
+      const approximate = r.taxReference?.automatic && ['irpj','csll'].includes(tax.id) ? ' (efetivo aproximado; valor apurado diretamente)' : '';
       return `${tax.label}: total ${total}${approximate}${row?' = '+currency.format(row.amount):''}; retenção ${tax.withholdingLabel}: ${retained}${row?.withheld != null?' = '+currency.format(row.withheld):''}.`;
     }),
     ...(t ? [
@@ -49,13 +47,13 @@ export function createSimulationSummary(r) {
         'Líquido disponível = valor previsto no pagamento menos saldo de tributos a recolher. Créditos não são considerados dinheiro disponível.'
       ] : ['Retenções incompletas: pagamento ainda não estimado. O líquido considera somente a carga tributária informada.'])
     ] : ['Líquido não calculado: informe todas as alíquotas totais, inclusive 0 quando não houver incidência.']),
-    ...(r.taxRegion?.netRange ? [`Sensibilidade ao ISS entre 2% e 5%: líquido entre ${currency.format(r.taxRegion.netRange.minimum)} e ${currency.format(r.taxRegion.netRange.maximum)}. Destaque calculado com ISS de referência de 5%, sem alíquota municipal confirmada.`] : []),
+    ...(r.taxReference?.netRange ? [`Sensibilidade ao ISS entre 2% e 5%: líquido entre ${currency.format(r.taxReference.netRange.minimum)} e ${currency.format(r.taxReference.netRange.maximum)}. Destaque calculado com ISS de referência de 5%, sem alíquota municipal confirmada.`] : []),
     '',
     'A participação fixa de 30% do parceiro incide sobre a receita bruta da taxa.',
     'Receita da Zermatt = receita bruta da taxa menos a comissão bruta do parceiro, antes de outras despesas.',
     'Retenções dependem do regime, do serviço, do município e da nota. IRRF é tratado como antecipação do IRPJ, sem dupla dedução.',
-    'A UF sozinha não determina o ISS. Não há acréscimo automático de ICMS interestadual sobre esta hipótese de comissão de serviço.',
-    r.taxRegion?.automatic
+    'O ISS é municipal; ajuste sua alíquota efetiva conforme a contabilidade.',
+    r.taxReference?.automatic
       ? 'A referência inclui adicional de IRPJ e aumento de presunção quando aplicáveis a três meses iguais desta comissão. Não considera outras receitas, ajustes acumulados, benefícios, créditos ou o regime real da empresa.'
       : 'Alíquotas efetivas devem refletir adicionais, créditos, benefícios, outras receitas e regras do período. O exemplo não apura essas particularidades.',
     'No Simples Nacional, não some o DAS aos tributos que ele já engloba. A projeção anual não prevê mudanças tributárias.',

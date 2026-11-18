@@ -1,7 +1,7 @@
 import {PARTNER_SHARE, parseBR, calculatePortfolio, resolveRate} from './model.mjs';
-import {TAXES, EXAMPLE_TAX_RATES, parseTaxRate, calculateCommissionTaxes} from './taxes.mjs';
+import {TAXES, parseTaxRate, calculateCommissionTaxes} from './taxes.mjs';
 import {createSimulationSummary} from './summary.mjs';
-import {BRAZILIAN_STATES, TAX_REFERENCE_DATE, getRegionalTaxReference} from './regional-taxes.mjs';
+import {TAX_REFERENCE_DATE, getTaxReference} from './tax-reference.mjs';
 
 const $ = id => document.getElementById(id);
 const currency = new Intl.NumberFormat('pt-BR', {style:'currency',currency:'BRL'});
@@ -12,8 +12,7 @@ let months = 1;
 let lastResult;
 let announcement;
 let tierSequence = 0;
-let exampleTaxes = false;
-let regionalReference = false;
+let automaticReference = true;
 let customISS = false;
 const taxNumber = new Intl.NumberFormat('pt-BR', {maximumFractionDigits:4});
 const ids = ['base','rate'];
@@ -21,10 +20,6 @@ const condoLabel = quantity => `${number.format(quantity)} ${quantity === 1 ? 'c
 const parseQuantity = value => /^\d+$/.test(value) ? Number(value) : NaN;
 const tierInputs = () => Array.from($('volume-rows').children);
 const readTiers = () => tierInputs().map(row => ({minimum:parseQuantity(row.querySelector('.tier-minimum').value), rate:parseBR(row.querySelector('.tier-rate').value)}));
-BRAZILIAN_STATES.forEach(state=>{
-  const option=document.createElement('option');option.value=state.code;option.textContent=`${state.name} (${state.code})`;
-  $('franchisee-state').append(option);
-});
 
 function clearTaxResults(message) {
   $('net-value').textContent = message;
@@ -37,14 +32,11 @@ function updateTaxes(result) {
   const configuration = {};
   let valid = true;
   const monthlyCommission=calculatePortfolio(result.quantity,result.basePerCondo,result.initialRate,result.share,1,result.tiers).admin;
-  const stateCode=$('franchisee-state').value;
-  const state=BRAZILIAN_STATES.find(item=>item.code===stateCode);
-  const municipality=$('franchisee-city').value.trim();
   let reference=null;
   let referenceError=null;
-  if(regionalReference) {
+  if(automaticReference) {
     try {
-      reference=getRegionalTaxReference(stateCode,monthlyCommission);
+      reference=getTaxReference(monthlyCommission);
       TAXES.forEach(tax=>{if(tax.id!=='iss'||!customISS)$(`tax-${tax.id}`).value=taxNumber.format(reference.rates[tax.id]);});
     }catch(error){referenceError=error.message;valid=false;}
   }
@@ -65,16 +57,12 @@ function updateTaxes(result) {
   const complete = TAXES.every(tax=>configuration[tax.id].rate !== null);
   const taxScenario = reference
     ? `${reference.assumptions} ${customISS?'ISS informado pelo usuário.':'ISS de referência de 5%, sem alíquota municipal confirmada.'} Adicional mensal estimado de IRPJ: ${currency.format(reference.additionalIRPJ)}.${reference.increasedPresumption?' Inclui aumento de presunção na parcela excedente ao limite proporcional trimestral.':''}`
-    : exampleTaxes ? 'Exemplo ilustrativo de lucro presumido: ISS de 5%, sem apuração de adicionais ou particularidades.'
-      : 'Alíquotas informadas pelo usuário; enquadramento e incidência dependem de validação contábil.';
-  $('tax-scenario').textContent = reference||exampleTaxes ? taxScenario : 'Use as alíquotas efetivas da contabilidade; nenhum enquadramento foi presumido.';
+    : 'Alíquotas informadas pelo usuário; enquadramento e incidência dependem de validação contábil.';
+  $('tax-scenario').textContent = reference ? taxScenario : 'Use as alíquotas efetivas da contabilidade; nenhum enquadramento foi presumido.';
   $('tax-limit').textContent = reference
     ? 'Estimativa de lucro presumido; valide regime, nota e retenções com a contabilidade antes de pagar. IRPJ inclui o adicional quando aplicável neste cenário; IRPJ e CSLL incluem a presunção majorada na parcela excedente ao limite proporcional trimestral. Os percentuais efetivos exibidos são aproximados; os valores são apurados diretamente. Não considera outras receitas, ajustes acumulados, benefícios ou créditos. No Simples Nacional, não some o DAS a esses impostos: informe a repartição efetiva validada pela contabilidade.'
     : 'Estimativa para planejamento; valide com a contabilidade antes de emitir a nota e pagar. No Simples, não some o DAS aos tributos que ele já engloba. Adicionais, créditos, outras receitas e regras do período precisam estar refletidos nas alíquotas efetivas. O exemplo não os apura automaticamente.';
-  $('regional-caption').textContent = state
-    ? `Franqueado: ${municipality?municipality+' · ':''}${state.name} (${state.code}). Pagadora: Zermatt/PR. Referência: ${TAX_REFERENCE_DATE}.`
-    : 'Pagadora no Paraná. Selecione o estado do franqueado para carregar a referência.';
-  $('regional-disclaimer').textContent = `Os tributos federais deste serviço não mudam só pela UF${state?' ('+state.code+')':''}. Não se acrescenta ICMS de operação interestadual a esta hipótese de comissão de serviço. O ISS e as retenções exigem validação do município, serviço e regime.`;
+  $('reference-caption').textContent = `Cenário ${reference?'de referência: lucro presumido':'com alíquotas informadas'}. Referências consultadas em ${TAX_REFERENCE_DATE}. Valores estimados.`;
   $('commission-gross').textContent = currency.format(result.admin);
   $('tax-error').hidden = valid;
   $('tax-error').textContent = referenceError ?? 'Use alíquotas de 0% a 100%, com até quatro casas decimais. Preencha 0 quando não houver incidência.';
@@ -97,17 +85,17 @@ function updateTaxes(result) {
     $('net-range').textContent=`Com ISS entre 2% e 5%, o líquido neste cenário fica entre ${currency.format(estimate.net)} e ${currency.format(upper)}. O destaque usa 5% como referência; confirme a alíquota municipal.`;
     $('net-range').hidden=false;
   }
-  $('tax-status').textContent = !valid ? 'Revise os impostos' : !estimate ? 'Configuração pendente' : reference ? 'Referência estimada por UF' : exampleTaxes ? 'Exemplo ilustrativo' : 'Estimativa configurada';
+  $('tax-status').textContent = !valid ? 'Revise os impostos' : !estimate ? 'Configuração pendente' : reference ? 'Estimativa de referência' : 'Estimativa configurada';
   $('tax-settings-status').textContent = !valid ? 'Revisar' : !estimate ? 'Alíquotas pendentes' : estimate.withholdingComplete ? 'Totais e retenções' : 'Retenções pendentes';
   $('net-caption').textContent = !estimate
-    ? 'Selecione o estado para carregar a referência ou informe todos os tributos sobre a comissão, inclusive 0 quando não houver incidência.'
+    ? 'Informe todos os tributos sobre a comissão, inclusive 0 quando não houver incidência, ou restaure a referência.'
     : estimate.withholdingComplete
       ? 'Valor disponível após retenções e provisão dos tributos restantes. Créditos a compensar não entram como dinheiro disponível.'
       : 'Após os tributos informados. Retenções pendentes: este valor ainda não é uma previsão do pagamento.';
   $('withholding-status').textContent = estimate?.withholdingComplete
     ? 'Pagamento = comissão bruta menos retenções. O saldo dos tributos fica a cargo do franqueado. Valide as retenções antes de pagar.'
     : 'Informe todas as retenções, inclusive 0, para estimar o pagamento.';
-  if (!estimate) clearTaxResults(!valid ? 'Revise as alíquotas' : !state&&TAXES.every(tax=>configuration[tax.id].rate===null) ? 'Selecione o estado' : 'Informe as alíquotas');
+  if (!estimate) clearTaxResults(!valid ? 'Revise as alíquotas' : 'Informe as alíquotas');
   else {
     $('net-value').textContent = currency.format(estimate.net);
     $('tax-total').textContent = currency.format(estimate.taxTotal);
@@ -123,7 +111,7 @@ function updateTaxes(result) {
   if (!valid) $('tax-settings').open = true;
   $('export').disabled = !valid;
   return {taxConfiguration:configuration, taxEstimate:estimate, taxScenario,
-    taxRegion:{payerState:'PR',stateCode:state?.code??null,stateName:state?.name??null,municipality,reviewedAt:TAX_REFERENCE_DATE,automatic:!!reference,customISS,netRange}};
+    taxReference:{reviewedAt:TAX_REFERENCE_DATE,automatic:!!reference,customISS,netRange}};
 }
 
 function addTier() {
@@ -230,7 +218,7 @@ function update() {
 TAXES.forEach(tax=>['tax','retained'].forEach(prefix=>{
   const input=$(`${prefix}-${tax.id}`);
   input.addEventListener('input',()=>{
-    if(prefix==='tax') {exampleTaxes=false;if(tax.id==='iss'&&regionalReference)customISS=true;else regionalReference=false;}
+    if(prefix==='tax') {if(tax.id==='iss'&&automaticReference)customISS=true;else automaticReference=false;}
     update();
   });
   input.addEventListener('blur',()=>{const value=parseTaxRate(input.value);if(Number.isFinite(value))input.value=taxNumber.format(value);});
@@ -240,18 +228,11 @@ $('configure-taxes').addEventListener('click',()=>{
   $('tax-iss').focus();
 });
 $('tax-example').addEventListener('click',()=>{
-  regionalReference=!!$('franchisee-state').value;customISS=false;
-  TAXES.forEach(tax=>{$(`tax-${tax.id}`).value=taxNumber.format(EXAMPLE_TAX_RATES[tax.id]);$(`retained-${tax.id}`).value='';});
-  exampleTaxes=!regionalReference;update();
-});
-$('no-withholding').addEventListener('click',()=>{TAXES.forEach(tax=>$(`retained-${tax.id}`).value='0');update();});
-$('franchisee-state').addEventListener('change',()=>{
-  regionalReference=!!$('franchisee-state').value;customISS=false;exampleTaxes=false;
-  $('franchisee-city').value='';
-  TAXES.forEach(tax=>['tax','retained'].forEach(prefix=>$(`${prefix}-${tax.id}`).value=''));
+  automaticReference=true;customISS=false;
+  TAXES.forEach(tax=>$(`retained-${tax.id}`).value='');
   update();
 });
-$('franchisee-city').addEventListener('input',update);
+$('no-withholding').addEventListener('click',()=>{TAXES.forEach(tax=>$(`retained-${tax.id}`).value='0');update();});
 ids.forEach(id => $(id).addEventListener('input',update));
 $('quantity').addEventListener('input',update);
 $('add-tier').addEventListener('click',addTier);
@@ -270,8 +251,7 @@ $('reset').addEventListener('click',()=>{
   $('base').value='100.000,00'; $('rate').value='4';
   $('quantity').value='1';$('volume-rows').replaceChildren();$('volume-settings').open=false;
   TAXES.forEach(tax=>['tax','retained'].forEach(prefix=>$(`${prefix}-${tax.id}`).value=''));
-  exampleTaxes=false;regionalReference=false;customISS=false;
-  $('franchisee-state').value='';$('franchisee-city').value='';$('tax-settings').open=false;
+  automaticReference=true;customISS=false;$('tax-settings').open=false;
   months=1;
   document.querySelectorAll('[data-months]').forEach(item=>item.setAttribute('aria-pressed',String(item.dataset.months==='1')));
   update();
