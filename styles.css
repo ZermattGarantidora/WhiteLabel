@@ -71,6 +71,13 @@ main { padding-top: 30px; }
 .add-tier { width: 100%; background: #f3f6fb; color: #56739a; font-size: 9px; border: 1px dashed #c5d2e5; border-radius: 5px; padding: 8px; }
 .add-tier:hover { background: #eaf0f9; }
 .share-field { margin-bottom: 24px; }
+.regional-settings { margin: 0 0 24px; padding-top: 20px; border-top: 1px solid var(--line); }
+.regional-settings h3 { font-size: 12px; margin: 0 0 8px; }
+.regional-settings .payer-location { font-size: 10px; margin: 0 0 16px; color: #526a88; }
+.regional-settings label { display: block; margin: 12px 0 7px; font-size: 11px; line-height: 1.5; font-weight: 550; }
+.regional-settings select, .regional-settings input { width: 100%; min-width: 0; border: 1px solid #d0dbea; border-radius: 6px; padding: 11px 9px; background: white; color: var(--navy); font: inherit; font-size: 12px; }
+.regional-settings select:focus-visible, .regional-settings input:focus-visible { outline: 2px solid #1d67cd80; outline-offset: 2px; }
+.regional-settings > p:last-child { margin: 11px 0 0; color: #64748b; font-size: 10px; line-height: 1.65; }
 .reset-button { display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; border: 1px solid #e0e6ef; border-radius: 7px; background: white; color: #71819b; font-size: 10px; padding: 11px; }
 .reset-button:hover { background: #f4f7fb; }
 .reset-button svg { width: 16px; height: 16px; }
@@ -89,6 +96,54 @@ main { padding-top: 30px; }
 .overline { margin: 0 0 7px; }
 .overline > span { color: #a1acbd; font-weight: 400; letter-spacing: .3px; }
 .gross-number { margin: 0; font-size: 39px; line-height: 1.2; font-weight: 550; letter-spacing: -1.6px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.net-card { margin-top: 22px; padding: 21px; background: #edf4ff; border: 1px solid #cddff8; border-radius: 11px; }
+.net-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.net-heading h3 { margin: 0; font-size: 12px; font-weight: 650; color: #28568d; }
+.tax-badge { font-size: 9px; line-height: 1.5; color: #546b88; border: 1px solid #c4d6ed; padding: 3px 7px; border-radius: 5px; background: #ffffff80; }
+.net-value { margin: 15px 0 8px; color: var(--blue); font-size: clamp(24px, 3vw, 34px); font-weight: 600; letter-spacing: -.8px; line-height: 1.25; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.tax-caption { font-size: 11px; line-height: 1.6; color: #4e6684; margin: 0; }
+.regional-caption, .net-range { font-size: 10px; line-height: 1.65; margin: 10px 0 0; color: #4e6684; }
+.net-range { padding-top: 10px; border-top: 1px solid #ccdcf1; }
+.net-breakdown, .payment-breakdown { margin: 17px 0 0; font-size: 11px; line-height: 1.6; }
+.net-breakdown > div, .payment-breakdown > div { display: flex; justify-content: space-between; align-items: baseline; gap: 15px; padding: 7px 0; }
+.net-breakdown dt, .payment-breakdown dt { color: #526a88; }
+.net-breakdown dd, .payment-breakdown dd { flex-shrink: 0; max-width: 55%; margin: 0; font-weight: 600; text-align: right; color: var(--navy); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.configure-taxes { display: flex; justify-content: space-between; gap: 12px; width: 100%; padding: 12px 0 0; margin-top: 9px; border: 0; border-top: 1px solid #ccdcf1; background: transparent; color: #215ca6; text-align: left; font-size: 11px; font-weight: 550; }
+.tax-settings { margin-top: 12px; border: 1px solid var(--line); border-radius: 8px; background: white; }
+.tax-settings summary { padding: 13px 15px; cursor: pointer; color: #4e6684; font-size: 11px; line-height: 1.7; }
+.tax-settings summary > span { float: right; margin-left: 10px; color: #64748b; font-size: 9px; }
+.tax-content { padding: 0 15px 17px; }
+.tax-content > p { margin: 0 0 14px; color: #546780; font-size: 11px; line-height: 1.65; }
+.tax-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.tax-actions button { padding: 9px 11px; border-radius: 6px; border: 1px solid #cbd9eb; background: #f5f8fd; font-size: 10px; color: #325c90; }
+.tax-actions button:hover { background: #eaf1fc; }
+.tax-content > .tax-scenario { color: #795b2a; background: #fff9eb; border-radius: 5px; padding: 9px; font-size: 10px; }
+.tax-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; table-layout: fixed; }
+.tax-table th { color: #546780; font-weight: 550; font-size: 11px; text-align: left; }
+.tax-table thead th { padding: 8px 0; font-size: 10px; }
+.tax-table th:first-child { width: 30%; }
+.tax-table th:not(:first-child) { width: 35%; }
+.tax-table td { padding: 9px 0 9px 12px; vertical-align: top; }
+.tax-table thead th:not(:first-child) { padding-left: 12px; }
+.tax-table tbody tr { border-top: 1px solid var(--line); }
+.tax-table input { width: 100%; min-width: 0; border: 1px solid #d0dbea; border-radius: 5px; padding: 9px 7px; background: white; color: var(--navy); font-size: 13px; font-variant-numeric: tabular-nums; text-align: right; }
+.tax-table input::placeholder { color: #6b7b91; font-size: 10px; }
+.tax-table input:focus-visible { outline: 2px solid #1d67cd80; outline-offset: 2px; }
+.tax-table input[aria-invalid="true"] { border-color: #b04b40; }
+.tax-table small { display: block; margin-top: 4px; font-size: 9px; color: #61748d; overflow-wrap: anywhere; }
+.tax-table td small { text-align: right; font-variant-numeric: tabular-nums; }
+.payment-breakdown { border-top: 1px solid var(--line); margin-top: 15px; }
+.payment-highlight { font-size: 12px; }
+.payment-highlight dd { color: var(--blue); }
+.tax-content > .tax-warning { color: #795b2a; margin: 12px 0; }
+.tax-content > .tax-limit { padding-top: 12px; border-top: 1px solid var(--line); margin-bottom: 0; font-size: 10px; }
+.tax-content > .regional-disclaimer { margin: 12px 0; font-size: 10px; }
+.tax-sources { border-top: 1px solid var(--line); padding-top: 8px; }
+.tax-sources summary { font-size: 10px; padding: 6px 0; }
+.tax-sources p, .tax-sources li { font-size: 10px; line-height: 1.7; color: #546780; }
+.tax-sources ul { margin: 8px 0 0; padding-left: 17px; }
+.tax-sources a { color: #215ca6; overflow-wrap: anywhere; }
+.tax-content > .field-error { color: #b04b40; }
 .chart-layout { flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 25px; margin: 24px 0 22px; }
 .chart-container { position: relative; width: 280px; flex: 0 0 280px; aspect-ratio: 1; }
 .donut { display: block; width: 100%; height: 100%; }

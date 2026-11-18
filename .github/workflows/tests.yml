@@ -1,0 +1,27 @@
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main, 'codex/**']
+
+permissions:
+  contents: read
+
+jobs:
+  commission-tax-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - name: Validate module syntax
+        run: |
+          node --check app.mjs
+          node --check model.mjs
+          node --check taxes.mjs
+          node --check regional-taxes.mjs
+          node --check summary.mjs
+      - name: Test calculation and export with coverage
+        run: node --test --experimental-test-coverage --test-coverage-include=taxes.mjs --test-coverage-include=regional-taxes.mjs --test-coverage-include=summary.mjs --test-coverage-lines=80 --test-coverage-functions=80 --test-coverage-branches=80
