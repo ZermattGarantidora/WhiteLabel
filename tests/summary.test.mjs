@@ -20,6 +20,8 @@ test('exportação inicial não inventa líquido nem considera vazio como isento
 });
 test('exporta comissão, tributos e líquido no mês sem confundir com receita total',()=>{
   const text=normalized(scenario());
+  assert.match(text,/Participação do parceiro: 30% \(fixa\)/);
+  assert.doesNotMatch(text,/Participação da administradora/);
   assert.match(text,/Receita bruta da taxa: R\$ 4\.000,00/);
   assert.match(text,/Comissão bruta.*R\$ 1\.200,00/);
   assert.match(text,/Tributos estimados: R\$ 195,96/);

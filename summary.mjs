@@ -18,10 +18,10 @@ export function createSimulationSummary(r) {
     ...r.tiers.slice().sort((a,b)=>a.minimum-b.minimum).map(tier=>`Faixa: a partir de ${condoLabel(tier.minimum)} — ${pct(tier.rate)}`),
     `Taxa aplicada: ${pct(r.rate)} (${r.appliedThreshold?'a partir de '+condoLabel(r.appliedThreshold):'taxa inicial'})`,
     `Preço mensal por condomínio (valor da taxa): ${currency.format(r.quantity===0?0:r.unitPrice)}`,
-    `Participação da administradora: ${pct(r.share)}`,
+    `Participação do parceiro: ${pct(r.share)} (fixa)`,
     '',
     `Receita bruta da taxa: ${currency.format(r.gross)}`,
-    `Comissão bruta da administradora/franqueado: ${currency.format(r.admin)}`,
+    `Comissão bruta do parceiro/franqueado: ${currency.format(r.admin)}`,
     `Receita da Zermatt: ${currency.format(r.remainder)}`,
     '',
     'ESTIMATIVA TRIBUTÁRIA DO FRANQUEADO',
@@ -29,7 +29,7 @@ export function createSimulationSummary(r) {
     ...(r.taxRegion?.municipality ? [`Município informado: ${r.taxRegion.municipality} (alíquota municipal não consultada automaticamente).`] : []),
     ...(r.taxRegion ? [`Referências legislativas consultadas em ${r.taxRegion.reviewedAt}; cenário de 2026, sem atualização legislativa automática.`] : []),
     r.taxScenario,
-    'Base de todos os percentuais: comissão bruta da administradora, não a receita total da taxa.',
+    'Base de todos os percentuais: comissão bruta do parceiro, não a receita total da taxa.',
     ...TAXES.map(tax => {
       const entry = r.taxConfiguration[tax.id];
       const row = t?.rows.find(item=>item.id===tax.id);
@@ -51,8 +51,8 @@ export function createSimulationSummary(r) {
     ] : ['Líquido não calculado: informe todas as alíquotas totais, inclusive 0 quando não houver incidência.']),
     ...(r.taxRegion?.netRange ? [`Sensibilidade ao ISS entre 2% e 5%: líquido entre ${currency.format(r.taxRegion.netRange.minimum)} e ${currency.format(r.taxRegion.netRange.maximum)}. Destaque calculado com ISS de referência de 5%, sem alíquota municipal confirmada.`] : []),
     '',
-    'A participação da administradora incide sobre a receita bruta da taxa.',
-    'Receita da Zermatt = receita bruta da taxa menos a comissão bruta da administradora, antes de outras despesas.',
+    'A participação fixa de 30% do parceiro incide sobre a receita bruta da taxa.',
+    'Receita da Zermatt = receita bruta da taxa menos a comissão bruta do parceiro, antes de outras despesas.',
     'Retenções dependem do regime, do serviço, do município e da nota. IRRF é tratado como antecipação do IRPJ, sem dupla dedução.',
     'A UF sozinha não determina o ISS. Não há acréscimo automático de ICMS interestadual sobre esta hipótese de comissão de serviço.',
     r.taxRegion?.automatic

@@ -1,4 +1,4 @@
-import {parseBR, calculatePortfolio, resolveRate} from './model.mjs';
+import {PARTNER_SHARE, parseBR, calculatePortfolio, resolveRate} from './model.mjs';
 import {TAXES, EXAMPLE_TAX_RATES, parseTaxRate, calculateCommissionTaxes} from './taxes.mjs';
 import {createSimulationSummary} from './summary.mjs';
 import {BRAZILIAN_STATES, TAX_REFERENCE_DATE, getRegionalTaxReference} from './regional-taxes.mjs';
@@ -16,7 +16,7 @@ let exampleTaxes = false;
 let regionalReference = false;
 let customISS = false;
 const taxNumber = new Intl.NumberFormat('pt-BR', {maximumFractionDigits:4});
-const ids = ['base','rate','share'];
+const ids = ['base','rate'];
 const condoLabel = quantity => `${number.format(quantity)} ${quantity === 1 ? 'condomínio' : 'condomínios'}`;
 const parseQuantity = value => /^\d+$/.test(value) ? Number(value) : NaN;
 const tierInputs = () => Array.from($('volume-rows').children);
@@ -178,7 +178,9 @@ function update() {
   $('volume-count').textContent=tiers.length?`${tiers.length} ${tiers.length===1?'faixa':'faixas'}`:'Configurar faixas';
   $('add-tier').disabled=tiers.length>=20;
   valid=valid&&tiersValid;
-  const [base,initialRate,share] = values;
+  const [base,initialRate] = values;
+  const share = PARTNER_SHARE;
+  $('share').value = pct(share);
   if(quantityValid && Number.isFinite(base) && Math.round(base*100)*quantity/100>1e12) {
     $('base').setAttribute('aria-invalid','true');$('base-error').hidden=false;
     $('base-error').textContent='A arrecadação total deve ser de até R$ 1 trilhão. Reduza a média por condomínio ou a quantidade.';valid=false;
@@ -218,11 +220,11 @@ function update() {
   $('separator-top').style.opacity = visibleShare > 0 && visibleShare < 100 ? '1' : '0';
   $('separator-end').style.opacity = visibleShare > 0 && visibleShare < 100 ? '1' : '0';
   $('separator-end').setAttribute('transform',`rotate(${visibleShare*3.6} 160 160)`);
-  $('chart-desc').textContent = result.gross > 0 ? `Administradora: ${pct(share)}, ${currency.format(result.admin)}. Zermatt: ${pct(100-share)}, ${currency.format(result.remainder)}.` : 'Sem receita para distribuir neste cenário.';
+  $('chart-desc').textContent = result.gross > 0 ? `Parceiro: ${pct(share)}, ${currency.format(result.admin)}. Zermatt: ${pct(100-share)}, ${currency.format(result.remainder)}.` : 'Sem receita para distribuir neste cenário.';
   document.querySelector('.center-bottom').textContent = result.gross > 0 ? 'da receita da taxa' : 'sem receita no cenário';
   $('annual-note').hidden = months === 1;
   clearTimeout(announcement);
-  announcement = setTimeout(() => { $('live-result').textContent = `Resultado ${months===1?'mensal':'anual'}: receita bruta ${currency.format(result.gross)}. Comissão bruta da administradora: ${currency.format(result.admin)}. Receita da Zermatt: ${currency.format(result.remainder)}. ${taxResult.taxEstimate ? `Líquido estimado: ${currency.format(taxResult.taxEstimate.net)}. ${taxResult.taxEstimate.withholdingComplete ? `Pagamento previsto: ${currency.format(taxResult.taxEstimate.payable)}.` : 'Retenções pendentes; pagamento não estimado.'}` : 'Líquido não calculado. Informe alíquotas válidas para todos os tributos.'}`; },450);
+  announcement = setTimeout(() => { $('live-result').textContent = `Resultado ${months===1?'mensal':'anual'}: receita bruta ${currency.format(result.gross)}. Comissão bruta do parceiro: ${currency.format(result.admin)}. Receita da Zermatt: ${currency.format(result.remainder)}. ${taxResult.taxEstimate ? `Líquido estimado: ${currency.format(taxResult.taxEstimate.net)}. ${taxResult.taxEstimate.withholdingComplete ? `Pagamento previsto: ${currency.format(taxResult.taxEstimate.payable)}.` : 'Retenções pendentes; pagamento não estimado.'}` : 'Líquido não calculado. Informe alíquotas válidas para todos os tributos.'}`; },450);
 }
 
 TAXES.forEach(tax=>['tax','retained'].forEach(prefix=>{
@@ -253,7 +255,7 @@ $('franchisee-city').addEventListener('input',update);
 ids.forEach(id => $(id).addEventListener('input',update));
 $('quantity').addEventListener('input',update);
 $('add-tier').addEventListener('click',addTier);
-['rate','share'].forEach(id => {
+['rate'].forEach(id => {
   $(`${id}-range`).addEventListener('input', event => { $(id).value = number.format(Number(event.target.value)); update(); });
   $(id).addEventListener('blur', () => { const value = parseBR($(id).value); if(Number.isFinite(value) && value>=0 && value<=100) $(id).value=number.format(value); });
 });
@@ -265,7 +267,7 @@ document.querySelectorAll('[data-months]').forEach(button => button.addEventList
   update();
 }));
 $('reset').addEventListener('click',()=>{
-  $('base').value='100.000,00'; $('rate').value='4'; $('share').value='30';
+  $('base').value='100.000,00'; $('rate').value='4';
   $('quantity').value='1';$('volume-rows').replaceChildren();$('volume-settings').open=false;
   TAXES.forEach(tax=>['tax','retained'].forEach(prefix=>$(`${prefix}-${tax.id}`).value=''));
   exampleTaxes=false;regionalReference=false;customISS=false;

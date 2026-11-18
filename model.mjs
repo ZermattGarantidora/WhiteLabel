@@ -1,3 +1,5 @@
+export const PARTNER_SHARE = 30;
+
 export function parseBR(value) {
   const raw = String(value).trim().replace(/^R\$\s*/, '').replace(/\s/g, '');
   if (/^(?:\d+|\d{1,3}(?:\.\d{3})+)(?:,\d{1,2})?$/.test(raw)) return Number(raw.replace(/\./g, '').replace(',', '.'));
@@ -9,6 +11,7 @@ export function calculate(base, rate, share, months = 1) {
   if (![base, rate, share, months].every(Number.isFinite) || base < 0 || base > 1e12 || rate < 0 || rate > 100 || share < 0 || share > 100 || ![1, 12].includes(months)) {
     throw new RangeError('Valores fora dos limites da simulação.');
   }
+  if (share !== PARTNER_SHARE) throw new RangeError('A participação do parceiro é fixa em 30%.');
   const baseCents = Math.round(base * 100);
   const grossCents = Math.round(baseCents * rate / 100);
   const adminCents = Math.round(grossCents * share / 100);

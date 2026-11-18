@@ -24,4 +24,4 @@ jobs:
           node --check regional-taxes.mjs
           node --check summary.mjs
       - name: Test calculation and export with coverage
-        run: node --test --experimental-test-coverage --test-coverage-include=taxes.mjs --test-coverage-include=regional-taxes.mjs --test-coverage-include=summary.mjs --test-coverage-lines=80 --test-coverage-functions=80 --test-coverage-branches=80
+        run: node --test --experimental-test-coverage --test-coverage-include=model.mjs --test-coverage-include=taxes.mjs --test-coverage-include=regional-taxes.mjs --test-coverage-include=summary.mjs --test-coverage-lines=80 --test-coverage-functions=80 --test-coverage-branches=80

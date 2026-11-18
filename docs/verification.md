@@ -36,3 +36,13 @@ Capturas da prévia foram salvas fora dos arquivos publicados do site. Os valore
 A referência tributária é um snapshot de 18/11/2026, conforme [commission-taxes.md](commission-taxes.md). Não consulta legislação municipal, não determina o regime por UF, não emite nota, não efetua pagamento e não promete atualização automática ou apuração fiscal completa. O líquido depende das hipóteses exibidas e deve ser validado pela contabilidade.
 
 O workflow `Tests` prepara o gate para pull requests e pushes. A alteração deve seguir por revisão de PR; esta verificação não é autorização de merge nem comprovação de publicação no site existente.
+
+## Participação fixa do parceiro — 18/11/2026
+
+Critério 13 de `commission-taxes.md`: rótulo **Participação do parceiro**, percentual fixo de **30%**, sem possibilidade de edição.
+
+- **118 testes aprovados**, incluindo rejeição de outros percentuais nas chamadas diretas de cálculo e carteira, comissão mensal/anual, faixas e o novo rótulo no resumo.
+- Cobertura de `model.mjs`, `taxes.mjs`, `regional-taxes.mjs` e `summary.mjs`: **100% linhas, 100% funções e 99,34% branches**. O modelo de comissão foi incluído no gate de CI.
+- Sintaxe de `app.mjs` e diff sem erros.
+- Navegador: elemento `output` com rótulo correto, zero entradas editáveis no bloco, ausência de slider; 10 condomínios geram R$ 12.000 mensais e R$ 144.000 anuais para o parceiro, mantendo 30%. Restaurar mantém 30%. Console sem erros.
+- Revisão do diff completo sem achados P0/P1. Captura do campo salva fora dos arquivos publicados.

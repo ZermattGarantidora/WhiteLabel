@@ -71,6 +71,8 @@ main { padding-top: 30px; }
 .add-tier { width: 100%; background: #f3f6fb; color: #56739a; font-size: 9px; border: 1px dashed #c5d2e5; border-radius: 5px; padding: 8px; }
 .add-tier:hover { background: #eaf0f9; }
 .share-field { margin-bottom: 24px; }
+.share-field .label-row { margin-bottom: 8px; }
+.fixed-share { justify-content: center; padding-block: 12px; color: var(--navy); font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .regional-settings { margin: 0 0 24px; padding-top: 20px; border-top: 1px solid var(--line); }
 .regional-settings h3 { font-size: 12px; margin: 0 0 8px; }
 .regional-settings .payer-location { font-size: 10px; margin: 0 0 16px; color: #526a88; }
