@@ -1,18 +1,8 @@
 // Snapshot reviewed on 2026-11-18. See docs/commission-taxes.md for sources and scope.
-// UF alone does not determine municipal ISS or the franchisee's tax regime.
+// National reference scenario; municipal ISS remains an adjustable estimate.
 export const TAX_REFERENCE_DATE = '18/11/2026';
-export const BRAZILIAN_STATES = Object.freeze([
-  ['AC','Acre'],['AL','Alagoas'],['AP','Amapá'],['AM','Amazonas'],['BA','Bahia'],['CE','Ceará'],
-  ['DF','Distrito Federal'],['ES','Espírito Santo'],['GO','Goiás'],['MA','Maranhão'],['MT','Mato Grosso'],
-  ['MS','Mato Grosso do Sul'],['MG','Minas Gerais'],['PA','Pará'],['PB','Paraíba'],['PR','Paraná'],
-  ['PE','Pernambuco'],['PI','Piauí'],['RJ','Rio de Janeiro'],['RN','Rio Grande do Norte'],
-  ['RS','Rio Grande do Sul'],['RO','Rondônia'],['RR','Roraima'],['SC','Santa Catarina'],
-  ['SP','São Paulo'],['SE','Sergipe'],['TO','Tocantins']
-].map(([code,name])=>Object.freeze({code,name})));
 
-export function getRegionalTaxReference(stateCode, monthlyCommission) {
-  const state = BRAZILIAN_STATES.find(item=>item.code===stateCode);
-  if (!state) throw new RangeError('Selecione um estado válido para o franqueado.');
+export function getTaxReference(monthlyCommission) {
   if (!Number.isFinite(monthlyCommission) || monthlyCommission < 0 || monthlyCommission > 6500000) {
     throw new RangeError('Referência de lucro presumido limitada a R$ 78 milhões anuais. Para outro enquadramento, informe as alíquotas da contabilidade.');
   }
@@ -28,7 +18,7 @@ export function getRegionalTaxReference(stateCode, monthlyCommission) {
   const monthlyCents = scaledQuarterlyTax => Number((scaledQuarterlyTax+150000n)/300000n);
   const effectiveRate = tax => quarterlyRevenue === 0n ? 0 : Number((Number(tax)/Number(quarterlyRevenue)/1000).toFixed(4));
   return {
-    state, payerState:'PR', reviewedAt:TAX_REFERENCE_DATE,
+    reviewedAt:TAX_REFERENCE_DATE,
     rates:{iss:5, pis:0.65, cofins:3, irpj:effectiveRate(incomeTax), csll:effectiveRate(socialTax)},
     monthlyTaxCents:{irpj:monthlyCents(incomeTax), csll:monthlyCents(socialTax)},
     additionalIRPJ:monthlyCents(additionalBase*10n)/100,

@@ -12,7 +12,7 @@ function scenario({months=1,quantity=1,tiers=[],withholding=null,empty=false,rat
 }
 const normalized = result=>createSimulationSummary(result).replace(/\u00a0/g,' ');
 
-test('exportação inicial não inventa líquido nem considera vazio como isento',()=>{
+test('alíquotas manuais incompletas não inventam líquido nem consideram vazio como isento',()=>{
   const text=normalized(scenario({empty:true}));
   assert.match(text,/Líquido não calculado/);
   assert.match(text,/ISS: total não informado; retenção ISS: não informada/);

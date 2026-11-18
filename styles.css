@@ -73,13 +73,6 @@ main { padding-top: 30px; }
 .share-field { margin-bottom: 24px; }
 .share-field .label-row { margin-bottom: 8px; }
 .fixed-share { justify-content: center; padding-block: 12px; color: var(--navy); font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.regional-settings { margin: 0 0 24px; padding-top: 20px; border-top: 1px solid var(--line); }
-.regional-settings h3 { font-size: 12px; margin: 0 0 8px; }
-.regional-settings .payer-location { font-size: 10px; margin: 0 0 16px; color: #526a88; }
-.regional-settings label { display: block; margin: 12px 0 7px; font-size: 11px; line-height: 1.5; font-weight: 550; }
-.regional-settings select, .regional-settings input { width: 100%; min-width: 0; border: 1px solid #d0dbea; border-radius: 6px; padding: 11px 9px; background: white; color: var(--navy); font: inherit; font-size: 12px; }
-.regional-settings select:focus-visible, .regional-settings input:focus-visible { outline: 2px solid #1d67cd80; outline-offset: 2px; }
-.regional-settings > p:last-child { margin: 11px 0 0; color: #64748b; font-size: 10px; line-height: 1.65; }
 .reset-button { display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; border: 1px solid #e0e6ef; border-radius: 7px; background: white; color: #71819b; font-size: 10px; padding: 11px; }
 .reset-button:hover { background: #f4f7fb; }
 .reset-button svg { width: 16px; height: 16px; }
@@ -104,7 +97,7 @@ main { padding-top: 30px; }
 .tax-badge { font-size: 9px; line-height: 1.5; color: #546b88; border: 1px solid #c4d6ed; padding: 3px 7px; border-radius: 5px; background: #ffffff80; }
 .net-value { margin: 15px 0 8px; color: var(--blue); font-size: clamp(24px, 3vw, 34px); font-weight: 600; letter-spacing: -.8px; line-height: 1.25; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .tax-caption { font-size: 11px; line-height: 1.6; color: #4e6684; margin: 0; }
-.regional-caption, .net-range { font-size: 10px; line-height: 1.65; margin: 10px 0 0; color: #4e6684; }
+.reference-caption, .net-range { font-size: 10px; line-height: 1.65; margin: 10px 0 0; color: #4e6684; }
 .net-range { padding-top: 10px; border-top: 1px solid #ccdcf1; }
 .net-breakdown, .payment-breakdown { margin: 17px 0 0; font-size: 11px; line-height: 1.6; }
 .net-breakdown > div, .payment-breakdown > div { display: flex; justify-content: space-between; align-items: baseline; gap: 15px; padding: 7px 0; }
@@ -139,7 +132,7 @@ main { padding-top: 30px; }
 .payment-highlight dd { color: var(--blue); }
 .tax-content > .tax-warning { color: #795b2a; margin: 12px 0; }
 .tax-content > .tax-limit { padding-top: 12px; border-top: 1px solid var(--line); margin-bottom: 0; font-size: 10px; }
-.tax-content > .regional-disclaimer { margin: 12px 0; font-size: 10px; }
+.tax-content > .iss-disclaimer { margin: 12px 0; font-size: 10px; }
 .tax-sources { border-top: 1px solid var(--line); padding-top: 8px; }
 .tax-sources summary { font-size: 10px; padding: 6px 0; }
 .tax-sources p, .tax-sources li { font-size: 10px; line-height: 1.7; color: #546780; }

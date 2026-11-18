@@ -29,13 +29,13 @@ Em **Taxa por quantidade**, as faixas são configuráveis. A maior quantidade m�
 
 ## Líquido estimado do franqueado
 
-Selecione o **estado do franqueado**. A pagadora permanece identificada como Zermatt/Paraná. A seleção carrega uma referência **estimada de lucro presumido para serviços de intermediação entre PJs**, revisada em **18/11/2026**; não confirma o regime real do franqueado.
+A estimativa é carregada automaticamente ao abrir o simulador. Ela usa uma referência **estimada de lucro presumido para serviços de intermediação entre PJs**, revisada em **18/11/2026**; não confirma o regime real do franqueado. Não são solicitados estado ou município.
 
 O campo abaixo da receita total mostra o líquido sobre a **comissão do parceiro**, com discriminação de ISS, PIS, Cofins, IRPJ e CSLL. Na referência, o IRPJ inclui o adicional quando aplicável. A presunção majorada de 2026 é aplicada ao excedente do limite proporcional trimestral de R$ 1,25 milhão; a provisão usa três meses iguais e somente esta comissão, sem outras receitas ou ajustes acumulados. Valores de IRPJ/CSLL são calculados diretamente, sem usar o arredondamento dos percentuais exibidos. Acima de R$ 78 milhões anuais projetados, a referência é bloqueada; use o enquadramento validado pela contabilidade.
 
-**O ISS é municipal.** Sem a alíquota do município e do serviço, usa-se 5% como referência e mostra-se a sensibilidade do líquido entre ISS de 2% e 5%. Informe o município para registrar o contexto e ajuste o ISS conforme a contabilidade. Não há consulta automática à prefeitura. Mudar de estado, por si só, não muda os impostos federais nem acrescenta ICMS interestadual a esta hipótese de serviço; valores iguais entre UFs são esperados.
+**O ISS é municipal.** Sem a alíquota efetiva confirmada, usa-se 5% como referência e mostra-se a sensibilidade do líquido entre ISS de 2% e 5%. Ajuste o ISS no painel de impostos conforme a contabilidade. Não há consulta automática à prefeitura.
 
-Em **Impostos e retenções**, ajuste as alíquotas efetivas e informe separadamente as retenções. Campo vazio significa desconhecido; informe `0` para ausência de incidência ou retenção. Alterar somente o ISS preserva o cálculo federal automático. Alterar outro tributo passa para alíquotas manuais; selecionar outra UF ou carregar a referência novamente restaura os parâmetros e limpa retenções/município quando a UF muda.
+Em **Impostos e retenções**, ajuste as alíquotas efetivas e informe separadamente as retenções. Campo vazio significa desconhecido; informe `0` para ausência de incidência ou retenção. Alterar somente o ISS preserva o cálculo federal automático. Alterar outro tributo passa para alíquotas manuais. **Restaurar referência tributária** reaplica os parâmetros automáticos e limpa as retenções; **Restaurar exemplo** também restaura a carteira inicial.
 
 - Comissão bruta = repasse ao parceiro antes dos tributos.
 - Valor previsto no pagamento = comissão bruta − retenções informadas.
@@ -46,7 +46,7 @@ Em **Impostos e retenções**, ajuste as alíquotas efetivas e informe separadam
 
 No exemplo de R$ 1.200 de comissão, ISS de 5%, PIS de 0,65%, Cofins de 3%, IRPJ efetivo de 4,8% e CSLL efetiva de 2,88%, os tributos somam R$ 195,96 e o líquido é R$ 1.004,04. Se apenas IRRF de 1,5% for retido, o pagamento estimado é R$ 1.182 e o saldo tributário é R$ 177,96. **São hipóteses ilustrativas, não uma orientação para efetuar essas retenções.**
 
-O resumo baixado inclui UF, município informado, valores, alíquotas, retenções, faixa de ISS e hipóteses. A referência não calcula Simples Nacional/DAS, lucro real, benefícios, créditos ou outras receitas da empresa. As regras e fontes estão em [docs/commission-taxes.md](docs/commission-taxes.md) e na própria interface. A projeção anual repete os parâmetros de 2026 e não prevê mudanças legais. Valide com a contabilidade antes de emitir a nota ou pagar.
+O resumo baixado inclui valores, alíquotas, retenções, faixa de ISS, vigência e hipóteses. A referência não calcula Simples Nacional/DAS, lucro real, benefícios, créditos ou outras receitas da empresa. As regras e fontes estão em [docs/commission-taxes.md](docs/commission-taxes.md) e na própria interface. A projeção anual repete os parâmetros de 2026 e não prevê mudanças legais. Valide com a contabilidade antes de emitir a nota ou pagar.
 
 ## Testes
 
@@ -59,7 +59,7 @@ node --test
 Gate de cobertura dos módulos de cálculo e exportação:
 
 ```sh
-node --test --experimental-test-coverage --test-coverage-include=model.mjs --test-coverage-include=taxes.mjs --test-coverage-include=regional-taxes.mjs --test-coverage-include=summary.mjs --test-coverage-lines=80 --test-coverage-functions=80 --test-coverage-branches=80
+node --test --experimental-test-coverage --test-coverage-include=model.mjs --test-coverage-include=taxes.mjs --test-coverage-include=tax-reference.mjs --test-coverage-include=summary.mjs --test-coverage-lines=80 --test-coverage-functions=80 --test-coverage-branches=80
 ```
 
 O workflow `Tests` executa esse gate e valida a sintaxe dos módulos. As verificações de navegador e seus limites estão documentados em [docs/verification.md](docs/verification.md).
@@ -73,7 +73,7 @@ O workflow `Tests` executa esse gate e valida a sintaxe dos módulos. As verific
 | `app.mjs` | Interações, gráfico e exportação |
 | `model.mjs` | Cálculos e regras de volume |
 | `taxes.mjs` | Cálculo tributário, retenções e validação |
-| `regional-taxes.mjs` | UFs e referência federal de 2026 |
+| `tax-reference.mjs` | Referência tributária de 2026 |
 | `summary.mjs` | Resumo para download |
 | `tests/` | Regressões de cálculo e exportação |
 | `assets/` | Logo e favicon oficiais |

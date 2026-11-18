@@ -57,15 +57,6 @@
           <p class="field-help" id="share-help">Participação fixa sobre a receita da taxa.</p>
         </div>
 
-        <section class="regional-settings" aria-labelledby="regional-heading">
-          <h3 id="regional-heading">Localização do franqueado</h3>
-          <p class="payer-location">Pagadora: Zermatt · Paraná (PR)</p>
-          <label for="franchisee-state">Estado do franqueado</label>
-          <select id="franchisee-state" aria-describedby="regional-help"><option value="">Selecione o estado</option></select>
-          <label for="franchisee-city">Município da nota (opcional)</label>
-          <input id="franchisee-city" type="text" maxlength="80" placeholder="Informe o município" aria-describedby="regional-help">
-          <p id="regional-help">Ao selecionar a UF, aplicamos um cenário estimado de <strong>lucro presumido</strong>. ISS de referência: 5%; a alíquota real é municipal. O município informado não preenche automaticamente o ISS. Ajuste os impostos conforme o enquadramento real.</p>
-        </section>
         <button class="reset-button" id="reset" type="button"><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 7.5A6 6 0 1 1 4 12M4.5 3.5v4h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Restaurar exemplo</button>
       </form>
 
@@ -77,9 +68,9 @@
 
         <section class="net-card" aria-labelledby="net-heading">
           <div class="net-heading"><h3 id="net-heading">Líquido estimado do franqueado</h3><span class="tax-badge" id="tax-status">Configuração pendente</span></div>
-          <p class="net-value" id="net-value">Selecione o estado</p>
+          <p class="net-value" id="net-value">Calculando estimativa…</p>
           <p class="tax-caption" id="net-caption">A estimativa considera os impostos sobre a comissão do parceiro.</p>
-          <p class="regional-caption" id="regional-caption">Pagadora no Paraná. Selecione o estado do franqueado para carregar a referência.</p>
+          <p class="reference-caption" id="reference-caption">Cenário de referência: lucro presumido. Valores estimados.</p>
           <p class="net-range" id="net-range" hidden></p>
           <dl class="net-breakdown">
             <div><dt>Comissão bruta</dt><dd id="commission-gross">R$ 1.200,00</dd></div>
@@ -92,7 +83,7 @@
           <summary>Impostos e retenções <span id="tax-settings-status">Não informados</span></summary>
           <div class="tax-content">
             <p id="tax-help">Informe as alíquotas <strong>efetivas sobre a comissão</strong>, validadas pela contabilidade para o regime, serviço e município. Preencha 0 quando não houver incidência. Campo vazio significa desconhecido.</p>
-            <div class="tax-actions"><button type="button" id="tax-example">Carregar exemplo ilustrativo</button><button type="button" id="no-withholding">Zerar retenções do cenário</button></div>
+            <div class="tax-actions"><button type="button" id="tax-example">Restaurar referência tributária</button><button type="button" id="no-withholding">Zerar retenções do cenário</button></div>
             <p class="tax-scenario" id="tax-scenario">Nenhum enquadramento tributário foi presumido.</p>
             <table class="tax-table">
               <caption class="sr-only">Alíquotas totais e retenções sobre a comissão bruta</caption>
@@ -115,7 +106,7 @@
             </dl>
             <p class="tax-warning" id="withholding-status">Informe todas as retenções, inclusive 0, para estimar o pagamento.</p>
             <p class="tax-limit" id="tax-limit">Estimativa para planejamento; valide com a contabilidade antes de emitir a nota e pagar. No Simples, não some o DAS aos tributos que ele já engloba. Adicionais, créditos, outras receitas e regras do período precisam estar refletidos nas alíquotas efetivas. O exemplo não os apura automaticamente.</p>
-            <p class="regional-disclaimer" id="regional-disclaimer">Os tributos federais deste serviço não mudam só pela UF. Não se acrescenta ICMS de operação interestadual a esta hipótese de comissão de serviço. O ISS e as retenções exigem validação do município, serviço e regime.</p>
+            <p class="iss-disclaimer">O ISS é municipal. Ajuste sua alíquota efetiva neste painel e valide as retenções conforme o serviço, o regime e a nota.</p>
             <details class="tax-sources"><summary>Fontes e vigência da referência</summary><p>Referências consultadas em <strong>18/11/2026</strong>, para o cenário de 2026. A projeção anual repete estes parâmetros e não prevê mudanças de exercício. Sem atualização legislativa automática.</p><ul><li><a href="https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp116.htm" target="_blank" rel="noopener noreferrer">LC 116/2003 — ISS, local do serviço e limites gerais</a></li><li><a href="https://www2.camara.leg.br/legin/fed/lei/1995/lei-9249-26-dezembro-1995-349062-normaatualizada-pl.html" target="_blank" rel="noopener noreferrer">Lei 9.249/1995 — IRPJ e presunção</a></li><li><a href="https://legis.senado.gov.br/norma/41886467/publicacao/41889674" target="_blank" rel="noopener noreferrer">LC 224/2025 — regras federais de 2026</a></li><li><a href="https://www.gov.br/receitafederal/pt-br/centrais-de-conteudo/publicacoes/perguntas-e-respostas/beneficios-fiscais/perguntas-e-respostas-reducao-dos-incentivos-e-beneficios-tributarios.pdf" target="_blank" rel="noopener noreferrer">Receita Federal — proporcionalidade e vigência das alterações</a></li><li><a href="https://normas.receita.fazenda.gov.br/sijut2consulta/link.action?idAto=15365&amp;visao=compilado" target="_blank" rel="noopener noreferrer">IN SRF 459/2004 — retenções de contribuições</a></li><li><a href="https://www.gov.br/receitafederal/pt-br/acesso-a-informacao/acoes-e-programas/reforma-tributaria-do-consumo/entenda" target="_blank" rel="noopener noreferrer">Receita Federal — transição IBS/CBS em 2026</a></li></ul></details>
           </div>
         </details>

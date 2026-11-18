@@ -46,3 +46,13 @@ Critério 13 de `commission-taxes.md`: rótulo **Participação do parceiro**, p
 - Sintaxe de `app.mjs` e diff sem erros.
 - Navegador: elemento `output` com rótulo correto, zero entradas editáveis no bloco, ausência de slider; 10 condomínios geram R$ 12.000 mensais e R$ 144.000 anuais para o parceiro, mantendo 30%. Restaurar mantém 30%. Console sem erros.
 - Revisão do diff completo sem achados P0/P1. Captura do campo salva fora dos arquivos publicados.
+
+## Remoção da localização — 18/11/2026
+
+Critérios 5, 7, 9 e 10 atualizados: localização, estado e município removidos; a referência tributária é carregada automaticamente e o ISS continua ajustável como tributo municipal.
+
+- **88 testes aprovados**. Os 32 casos exclusivos do catálogo/validação de UFs foram substituídos por dois casos da referência sem localização e de continuidade mensal/anual. As asserções financeiras, de arredondamento, limites, retenções e adicional de IRPJ foram preservadas. Essa alteração de contagem corresponde à retirada explícita da funcionalidade, não a falhas no gate.
+- Cobertura de `model.mjs`, `taxes.mjs`, `tax-reference.mjs` e `summary.mjs`: **100% linhas, 100% funções e 99,32% branches**; sintaxe e diff sem erros.
+- Navegador: nenhum campo ou bloco de localização no DOM; estimativa inicial de R$ 1.004,04, recálculo por quantidade e período, ISS ajustável a 3% (R$ 1.028,04), IRRF de 1,5%, bloqueio de entrada inválida, restauração da referência e participação fixa de 30%. Console sem erros.
+- Resumo baixado pela interface conferido sem UF ou município, preservando valores, vigência, hipóteses e distinção do ISS municipal. Captura do formulário sem localização salva fora do site.
+- Diff completo revisado sem achados P0/P1. Referência e testes renomeados para remover a dependência geográfica; workflow e README atualizados.
