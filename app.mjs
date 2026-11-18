@@ -1,4 +1,7 @@
 import {parseBR, calculatePortfolio, resolveRate} from './model.mjs';
+import {TAXES, EXAMPLE_TAX_RATES, parseTaxRate, calculateCommissionTaxes} from './taxes.mjs';
+import {createSimulationSummary} from './summary.mjs';
+import {BRAZILIAN_STATES, TAX_REFERENCE_DATE, getRegionalTaxReference} from './regional-taxes.mjs';
 
 const $ = id => document.getElementById(id);
 const currency = new Intl.NumberFormat('pt-BR', {style:'currency',currency:'BRL'});
@@ -9,11 +12,119 @@ let months = 1;
 let lastResult;
 let announcement;
 let tierSequence = 0;
+let exampleTaxes = false;
+let regionalReference = false;
+let customISS = false;
+const taxNumber = new Intl.NumberFormat('pt-BR', {maximumFractionDigits:4});
 const ids = ['base','rate','share'];
 const condoLabel = quantity => `${number.format(quantity)} ${quantity === 1 ? 'condomínio' : 'condomínios'}`;
 const parseQuantity = value => /^\d+$/.test(value) ? Number(value) : NaN;
 const tierInputs = () => Array.from($('volume-rows').children);
 const readTiers = () => tierInputs().map(row => ({minimum:parseQuantity(row.querySelector('.tier-minimum').value), rate:parseBR(row.querySelector('.tier-rate').value)}));
+BRAZILIAN_STATES.forEach(state=>{
+  const option=document.createElement('option');option.value=state.code;option.textContent=`${state.name} (${state.code})`;
+  $('franchisee-state').append(option);
+});
+
+function clearTaxResults(message) {
+  $('net-value').textContent = message;
+  ['tax-total','withheld-total','payment-value','taxes-to-pay','tax-credits'].forEach(id=>$(id).textContent='—');
+  TAXES.forEach(tax=>['tax','retained'].forEach(prefix=>$(`${prefix}-${tax.id}-amount`).textContent='—'));
+  $('tax-credit-row').hidden = true;
+}
+
+function updateTaxes(result) {
+  const configuration = {};
+  let valid = true;
+  const monthlyCommission=calculatePortfolio(result.quantity,result.basePerCondo,result.initialRate,result.share,1,result.tiers).admin;
+  const stateCode=$('franchisee-state').value;
+  const state=BRAZILIAN_STATES.find(item=>item.code===stateCode);
+  const municipality=$('franchisee-city').value.trim();
+  let reference=null;
+  let referenceError=null;
+  if(regionalReference) {
+    try {
+      reference=getRegionalTaxReference(stateCode,monthlyCommission);
+      TAXES.forEach(tax=>{if(tax.id!=='iss'||!customISS)$(`tax-${tax.id}`).value=taxNumber.format(reference.rates[tax.id]);});
+    }catch(error){referenceError=error.message;valid=false;}
+  }
+  TAXES.forEach(tax=>{
+    const entry = {};
+    [['tax','rate'],['retained','withholdingRate']].forEach(([prefix,key])=>{
+      const input = $(`${prefix}-${tax.id}`);
+      const empty = input.value.trim() === '';
+      const value = empty ? null : parseTaxRate(input.value);
+      const okay = empty || Number.isFinite(value);
+      input.setAttribute('aria-invalid',String(!okay));
+      valid = valid && okay;
+      entry[key] = value;
+    });
+    configuration[tax.id] = entry;
+    if(reference?.monthlyTaxCents[tax.id] !== undefined)entry.monthlyTaxCents=reference.monthlyTaxCents[tax.id];
+  });
+  const complete = TAXES.every(tax=>configuration[tax.id].rate !== null);
+  const taxScenario = reference
+    ? `${reference.assumptions} ${customISS?'ISS informado pelo usuário.':'ISS de referência de 5%, sem alíquota municipal confirmada.'} Adicional mensal estimado de IRPJ: ${currency.format(reference.additionalIRPJ)}.${reference.increasedPresumption?' Inclui aumento de presunção na parcela excedente ao limite proporcional trimestral.':''}`
+    : exampleTaxes ? 'Exemplo ilustrativo de lucro presumido: ISS de 5%, sem apuração de adicionais ou particularidades.'
+      : 'Alíquotas informadas pelo usuário; enquadramento e incidência dependem de validação contábil.';
+  $('tax-scenario').textContent = reference||exampleTaxes ? taxScenario : 'Use as alíquotas efetivas da contabilidade; nenhum enquadramento foi presumido.';
+  $('tax-limit').textContent = reference
+    ? 'Estimativa de lucro presumido; valide regime, nota e retenções com a contabilidade antes de pagar. IRPJ inclui o adicional quando aplicável neste cenário; IRPJ e CSLL incluem a presunção majorada na parcela excedente ao limite proporcional trimestral. Os percentuais efetivos exibidos são aproximados; os valores são apurados diretamente. Não considera outras receitas, ajustes acumulados, benefícios ou créditos. No Simples Nacional, não some o DAS a esses impostos: informe a repartição efetiva validada pela contabilidade.'
+    : 'Estimativa para planejamento; valide com a contabilidade antes de emitir a nota e pagar. No Simples, não some o DAS aos tributos que ele já engloba. Adicionais, créditos, outras receitas e regras do período precisam estar refletidos nas alíquotas efetivas. O exemplo não os apura automaticamente.';
+  $('regional-caption').textContent = state
+    ? `Franqueado: ${municipality?municipality+' · ':''}${state.name} (${state.code}). Pagadora: Zermatt/PR. Referência: ${TAX_REFERENCE_DATE}.`
+    : 'Pagadora no Paraná. Selecione o estado do franqueado para carregar a referência.';
+  $('regional-disclaimer').textContent = `Os tributos federais deste serviço não mudam só pela UF${state?' ('+state.code+')':''}. Não se acrescenta ICMS de operação interestadual a esta hipótese de comissão de serviço. O ISS e as retenções exigem validação do município, serviço e regime.`;
+  $('commission-gross').textContent = currency.format(result.admin);
+  $('tax-error').hidden = valid;
+  $('tax-error').textContent = referenceError ?? 'Use alíquotas de 0% a 100%, com até quatro casas decimais. Preencha 0 quando não houver incidência.';
+  let estimate = null;
+  if (valid && complete) {
+    try {
+      estimate = calculateCommissionTaxes(monthlyCommission,configuration,months);
+    } catch (error) {
+      valid = false;
+      $('tax-error').hidden = false;
+      $('tax-error').textContent = error.message;
+    }
+  }
+  let netRange=null;
+  $('net-range').hidden=true;
+  if(estimate&&reference&&!customISS) {
+    const withLowerISS={...configuration,iss:{...configuration.iss,rate:2}};
+    const upper=calculateCommissionTaxes(monthlyCommission,withLowerISS,months).net;
+    netRange={minimum:estimate.net,maximum:upper};
+    $('net-range').textContent=`Com ISS entre 2% e 5%, o líquido neste cenário fica entre ${currency.format(estimate.net)} e ${currency.format(upper)}. O destaque usa 5% como referência; confirme a alíquota municipal.`;
+    $('net-range').hidden=false;
+  }
+  $('tax-status').textContent = !valid ? 'Revise os impostos' : !estimate ? 'Configuração pendente' : reference ? 'Referência estimada por UF' : exampleTaxes ? 'Exemplo ilustrativo' : 'Estimativa configurada';
+  $('tax-settings-status').textContent = !valid ? 'Revisar' : !estimate ? 'Alíquotas pendentes' : estimate.withholdingComplete ? 'Totais e retenções' : 'Retenções pendentes';
+  $('net-caption').textContent = !estimate
+    ? 'Selecione o estado para carregar a referência ou informe todos os tributos sobre a comissão, inclusive 0 quando não houver incidência.'
+    : estimate.withholdingComplete
+      ? 'Valor disponível após retenções e provisão dos tributos restantes. Créditos a compensar não entram como dinheiro disponível.'
+      : 'Após os tributos informados. Retenções pendentes: este valor ainda não é uma previsão do pagamento.';
+  $('withholding-status').textContent = estimate?.withholdingComplete
+    ? 'Pagamento = comissão bruta menos retenções. O saldo dos tributos fica a cargo do franqueado. Valide as retenções antes de pagar.'
+    : 'Informe todas as retenções, inclusive 0, para estimar o pagamento.';
+  if (!estimate) clearTaxResults(!valid ? 'Revise as alíquotas' : !state&&TAXES.every(tax=>configuration[tax.id].rate===null) ? 'Selecione o estado' : 'Informe as alíquotas');
+  else {
+    $('net-value').textContent = currency.format(estimate.net);
+    $('tax-total').textContent = currency.format(estimate.taxTotal);
+    estimate.rows.forEach(row=>{
+      $(`tax-${row.id}-amount`).textContent = currency.format(row.amount);
+      $(`retained-${row.id}-amount`).textContent = row.withheld === null ? '—' : currency.format(row.withheld);
+    });
+    [['withheld-total','withheldTotal'],['payment-value','payable'],['taxes-to-pay','taxesToPay'],['tax-credits','taxCredits']].forEach(([id,key])=>{
+      $(id).textContent = estimate[key] === null ? '—' : currency.format(estimate[key]);
+    });
+    $('tax-credit-row').hidden = !estimate.taxCredits;
+  }
+  if (!valid) $('tax-settings').open = true;
+  $('export').disabled = !valid;
+  return {taxConfiguration:configuration, taxEstimate:estimate, taxScenario,
+    taxRegion:{payerState:'PR',stateCode:state?.code??null,stateName:state?.name??null,municipality,reviewedAt:TAX_REFERENCE_DATE,automatic:!!reference,customISS,netRange}};
+}
 
 function addTier() {
   const rows=tierInputs();
@@ -74,10 +185,21 @@ function update() {
   }else $('base-error').textContent='Informe um valor entre R$ 0 e R$ 1 trilhão.';
   $('invalid-note').hidden = valid;
   $('export').disabled = !valid;
-  if(!valid) return;
+  if(!valid) {
+    clearTimeout(announcement);
+    clearTaxResults('Revise o cenário');
+    $('net-range').hidden=true;
+    $('net-caption').textContent='Revise os campos destacados para recalcular a estimativa.';
+    $('tax-status').textContent='Cenário inválido';
+    $('commission-gross').textContent='—';
+    $('withholding-status').textContent='Pagamento não estimado: revise o cenário.';
+    $('live-result').textContent='Cenário inválido. Revise os campos destacados; o líquido não foi calculado.';
+    return;
+  }
   const result = calculatePortfolio(quantity,base,initialRate,share,months,tiers);
   const rate=result.rate;
-  lastResult = {...result,tiers};
+  const taxResult = updateTaxes({...result,tiers});
+  lastResult = {...result,tiers,...taxResult};
   $('portfolio-caption').textContent=`${condoLabel(quantity)} · ${currency.format(result.baseMonthly)}/mês`;
   $('effective-rate').textContent=pct(rate);
   $('applied-tier').textContent=result.appliedThreshold ? `Faixa a partir de ${condoLabel(result.appliedThreshold)}`:'Taxa inicial';
@@ -100,9 +222,34 @@ function update() {
   document.querySelector('.center-bottom').textContent = result.gross > 0 ? 'da receita da taxa' : 'sem receita no cenário';
   $('annual-note').hidden = months === 1;
   clearTimeout(announcement);
-  announcement = setTimeout(() => { $('live-result').textContent = `Resultado ${months===1?'mensal':'anual'}: receita bruta ${currency.format(result.gross)}. Administradora: ${currency.format(result.admin)}. Receita da Zermatt: ${currency.format(result.remainder)}.`; },450);
+  announcement = setTimeout(() => { $('live-result').textContent = `Resultado ${months===1?'mensal':'anual'}: receita bruta ${currency.format(result.gross)}. Comissão bruta da administradora: ${currency.format(result.admin)}. Receita da Zermatt: ${currency.format(result.remainder)}. ${taxResult.taxEstimate ? `Líquido estimado: ${currency.format(taxResult.taxEstimate.net)}. ${taxResult.taxEstimate.withholdingComplete ? `Pagamento previsto: ${currency.format(taxResult.taxEstimate.payable)}.` : 'Retenções pendentes; pagamento não estimado.'}` : 'Líquido não calculado. Informe alíquotas válidas para todos os tributos.'}`; },450);
 }
 
+TAXES.forEach(tax=>['tax','retained'].forEach(prefix=>{
+  const input=$(`${prefix}-${tax.id}`);
+  input.addEventListener('input',()=>{
+    if(prefix==='tax') {exampleTaxes=false;if(tax.id==='iss'&&regionalReference)customISS=true;else regionalReference=false;}
+    update();
+  });
+  input.addEventListener('blur',()=>{const value=parseTaxRate(input.value);if(Number.isFinite(value))input.value=taxNumber.format(value);});
+}));
+$('configure-taxes').addEventListener('click',()=>{
+  $('tax-settings').open=true;
+  $('tax-iss').focus();
+});
+$('tax-example').addEventListener('click',()=>{
+  regionalReference=!!$('franchisee-state').value;customISS=false;
+  TAXES.forEach(tax=>{$(`tax-${tax.id}`).value=taxNumber.format(EXAMPLE_TAX_RATES[tax.id]);$(`retained-${tax.id}`).value='';});
+  exampleTaxes=!regionalReference;update();
+});
+$('no-withholding').addEventListener('click',()=>{TAXES.forEach(tax=>$(`retained-${tax.id}`).value='0');update();});
+$('franchisee-state').addEventListener('change',()=>{
+  regionalReference=!!$('franchisee-state').value;customISS=false;exampleTaxes=false;
+  $('franchisee-city').value='';
+  TAXES.forEach(tax=>['tax','retained'].forEach(prefix=>$(`${prefix}-${tax.id}`).value=''));
+  update();
+});
+$('franchisee-city').addEventListener('input',update);
 ids.forEach(id => $(id).addEventListener('input',update));
 $('quantity').addEventListener('input',update);
 $('add-tier').addEventListener('click',addTier);
@@ -120,35 +267,16 @@ document.querySelectorAll('[data-months]').forEach(button => button.addEventList
 $('reset').addEventListener('click',()=>{
   $('base').value='100.000,00'; $('rate').value='4'; $('share').value='30';
   $('quantity').value='1';$('volume-rows').replaceChildren();$('volume-settings').open=false;
+  TAXES.forEach(tax=>['tax','retained'].forEach(prefix=>$(`${prefix}-${tax.id}`).value=''));
+  exampleTaxes=false;regionalReference=false;customISS=false;
+  $('franchisee-state').value='';$('franchisee-city').value='';$('tax-settings').open=false;
   months=1;
   document.querySelectorAll('[data-months]').forEach(item=>item.setAttribute('aria-pressed',String(item.dataset.months==='1')));
   update();
 });
 $('export').addEventListener('click',()=>{
   if(!lastResult || $('export').disabled) return;
-  const r=lastResult;
-  const lines=[
-    'ZERMATT GARANTIDORA — WHITE LABEL',
-    `Simulação ${r.months===1?'mensal':'anual (12 meses com valores mensais constantes)'}`,
-    '',
-    `Quantidade de condomínios: ${r.quantity}`,
-    `Arrecadação mensal média por condomínio: ${currency.format(r.basePerCondo)}`,
-    `Arrecadação mensal total: ${currency.format(r.baseMonthly)}`,
-    `Taxa inicial: ${pct(r.initialRate)}`,
-    ...r.tiers.slice().sort((a,b)=>a.minimum-b.minimum).map(t=>`Faixa: a partir de ${condoLabel(t.minimum)} — ${pct(t.rate)}`),
-    `Taxa aplicada: ${pct(r.rate)} (${r.appliedThreshold?'a partir de '+condoLabel(r.appliedThreshold):'taxa inicial'})`,
-    `Preço mensal por condomínio (valor da taxa): ${currency.format(r.quantity===0?0:r.unitPrice)}`,
-    `Participação da administradora: ${pct(r.share)}`,
-    '',
-    `Receita bruta da taxa: ${currency.format(r.gross)}`,
-    `Repasse à administradora: ${currency.format(r.admin)}`,
-    `Receita da Zermatt: ${currency.format(r.remainder)}`,
-    '',
-    'A participação da administradora incide sobre a receita bruta da taxa.',
-    'Receita da Zermatt = receita bruta da taxa menos o repasse à administradora, antes de outras despesas.',
-    'Valores arredondados mensalmente para centavos. Simulação ilustrativa.'
-  ];
-  const blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/plain;charset=utf-8'});
+  const blob=new Blob(['\ufeff'+createSimulationSummary(lastResult)],{type:'text/plain;charset=utf-8'});
   const url=URL.createObjectURL(blob);
   const link=document.createElement('a'); link.href=url;link.download='zermatt-white-label.txt';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 });
